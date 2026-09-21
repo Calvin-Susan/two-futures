@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Two Futures</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#1A1A18; --ink:#ffffff; --muted:#a8a69f; --line:#3a3935;
+    --field:#232320; --accent:#fec200; --accent-ink:#1A1A18; --soft:#26261f;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px)}
+  *,*::before,*::after{box-sizing:inherit}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Inter",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    font-size:17px; line-height:1.5;
+    min-height:100%;
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:56px 20px 80px}
+  h1,h2,.setup h2{font-family:"Outfit","Inter",sans-serif}
+  h1{font-size:2.6rem; line-height:1.1; font-weight:700; letter-spacing:-.02em; margin:0 0 16px}
+  h2{font-size:1.65rem; line-height:1.2; font-weight:600; letter-spacing:-.015em; margin:0 0 20px}
+  p{margin:0 0 14px; max-width:60ch}
+  .muted{color:var(--muted)}
+  .track{display:flex; gap:6px; margin-bottom:36px}
+  .track span{flex:1; height:4px; border-radius:0; background:var(--line)}
+  .track span.done{background:var(--accent)}
+  .stage{font-size:.95rem; color:var(--muted); margin-bottom:10px}
+  .setup{margin:0 0 30px; padding-bottom:26px; border-bottom:2px solid var(--accent)}
+  .setup h2{font-size:2rem; line-height:1.15; margin:0 0 14px; font-weight:700}
+  .setup p{font-size:1.05rem; color:var(--ink); max-width:56ch}
+  .bubble{
+    background:var(--soft); border-radius:12px 12px 12px 4px;
+    padding:18px 20px; margin-bottom:22px; font-size:1.15rem; line-height:1.45;
+  }
+  .bubble small{display:block; margin-top:8px; font-size:.95rem; color:var(--muted)}
+  textarea{
+    width:100%; min-height:170px; resize:vertical; font:inherit; color:var(--ink);
+    background:var(--field); border:1.5px solid var(--line); border-radius:4px; padding:14px 16px;
+  }
+  textarea:focus{outline:2px solid var(--accent); outline-offset:2px; border-color:var(--accent)}
+  .row{display:flex; gap:12px; align-items:center; margin-top:18px; flex-wrap:wrap}
+  button{
+    font:inherit; font-weight:600; border:0; border-radius:4px; padding:12px 22px; cursor:pointer;
+    background:var(--accent); color:var(--accent-ink);
+  }
+  button.quiet{background:transparent; color:var(--ink); text-decoration:underline; text-underline-offset:3px; font-weight:500; padding-left:8px; padding-right:8px}
+  button:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+  button[disabled]{opacity:.45; cursor:not-allowed}
+  .hint{font-size:.9rem; color:var(--muted); margin-left:auto}
+  .review{border-top:1px solid var(--line); padding-top:22px; margin-top:22px}
+  .review .q{font-weight:600; margin-bottom:6px}
+  .review .a{white-space:pre-wrap; margin-bottom:26px; padding-left:14px; border-left:3px solid var(--accent)}
+  .review .a.empty{color:var(--muted); font-style:italic; border-color:var(--line)}
+  .compare{background:var(--soft); border-radius:4px; border-left:4px solid var(--accent); padding:18px 20px; margin:28px 0}
+  .compare ul{margin:8px 0 0; padding-left:20px}
+  .compare li{margin-bottom:6px}
+  .toast{font-size:.95rem; color:var(--accent); font-weight:600}
+  .hidden{display:none}
+  @media (prefers-reduced-motion:no-preference){
+    .screen{animation:in .25s ease-out}
+    @keyframes in{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="app"></div>
+</div>
+
+<script>
+const SECTIONS = [
+  {
+    key: "worst",
+    label: "Worst case",
+    intro: "It's September 2027. Your business is in worse shape than it is today.",
+    scene: "Close your eyes for a second. It's a year from now. You're sitting where you're sitting right now, but the year didn't go the way you hoped. Revenue is down. The projects you wanted didn't come. Some of the clients you were counting on are gone. You're tired, and you're not sure what you would have done differently. You look back over the last twelve months and try to figure out where it went wrong.",
+    questions: [
+      { q: "What's the one decision you made, or didn't make, that contributed most?", hint: "Name it specifically." },
+      { q: "What did you keep tolerating that you already knew was a problem?", hint: "A client, a process, a habit, a number you stopped looking at." },
+      { q: "What did you tell yourself back in September 2026 that turned out to be wrong?", hint: "The story you were telling yourself about how things would work out." },
+      { q: "What did you spend the most time on that didn't move anything?", hint: "Where the hours went versus where the results came from." }
+    ]
+  },
+  {
+    key: "best",
+    label: "Best case",
+    intro: "It's September 2027. It was your best year yet.",
+    scene: "Now flip it. It's a year from now and things went better than you thought they could. Your calendar has room in it. The work you're doing is the work you want to be doing, for people who value it. You're charging what you're worth and clients are saying yes. You're less stressed than you've been in a long time, and the business feels like it's finally running the way you always pictured it. You look back over the last twelve months and see the handful of moves that made the difference.",
+    questions: [
+      { q: "What did you stop doing?", hint: "Services, clients, tasks, habits." },
+      { q: "What was the first small move that set the rest in motion?", hint: "Something you could have started in a week, not a quarter." },
+      { q: "What did you say no to that you would have said yes to before?", hint: "" },
+      { q: "What did you start charging for, or charge more for?", hint: "" }
+    ]
+  }
+];
+
+const STORE = "two-futures-v1";
+let state = load() || { section: 0, step: 0, view: "intro", answers: { worst: [], best: [] } };
+
+function load(){ try{ const r = localStorage.getItem(STORE); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){} }
+
+const app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function render(){
+  save();
+  if (state.view === "intro") return renderIntro();
+  if (state.view === "question") return renderQuestion();
+  if (state.view === "review") return renderReview();
+  if (state.view === "final") return renderFinal();
+}
+
+function track(sec, step){
+  const total = SECTIONS[sec].questions.length;
+  return `<div class="track">${Array.from({length: total}, (_, i) => `<span class="${i < step ? "done" : ""}"></span>`).join("")}</div>`;
+}
+
+function renderIntro(){
+  const hasWork = state.answers.worst.some(Boolean) || state.answers.best.some(Boolean);
+  app.innerHTML = `
+    <div class="screen">
+      <h1>Two Futures</h1>
+      <p>A quick exercise in two parts. First you'll imagine a year from now where things went badly. Then a year where things went well.</p>
+      <p>Four short questions each. Write down the first thing that comes to mind. You don't have to make it sound good or go deep. You'll be sharing your answers with the group.</p>
+      <div class="row">
+        <button id="start">Start with the worst case</button>
+        ${hasWork ? `<button class="quiet" id="reset">Start over</button>` : ""}
+      </div>
+    </div>`;
+  document.getElementById("start").onclick = () => { state.section = 0; state.step = 0; state.view = "question"; render(); };
+  const r = document.getElementById("reset"); if (r) r.onclick = () => { state = { section:0, step:0, view:"intro", answers:{worst:[], best:[]} }; render(); };
+}
+
+function renderQuestion(){
+  const sec = SECTIONS[state.section];
+  const i = state.step;
+  const item = sec.questions[i];
+  const val = state.answers[sec.key][i] || "";
+  app.innerHTML = `
+    <div class="screen">
+      <div class="stage">${sec.label} · ${i + 1} of ${sec.questions.length}</div>
+      ${track(state.section, i)}
+      ${i === 0 ? `<div class="setup"><h2>${esc(sec.intro)}</h2><p>${esc(sec.scene)}</p></div>` : ""}
+      <div class="bubble">${esc(item.q)}${item.hint ? `<small>${esc(item.hint)}</small>` : ""}</div>
+      <textarea id="ans" placeholder="Type your answer…" aria-label="${esc(item.q)}">${esc(val)}</textarea>
+      <div class="row">
+        ${i > 0 ? `<button class="quiet" id="back">Back</button>` : `<button class="quiet" id="back">Intro</button>`}
+        <span class="hint">Cmd/Ctrl + Enter to continue</span>
+        <button id="next">${i === sec.questions.length - 1 ? "Review my answers" : "Next"}</button>
+      </div>
+    </div>`;
+  const ta = document.getElementById("ans");
+  ta.focus();
+  ta.addEventListener("input", () => { state.answers[sec.key][i] = ta.value; save(); });
+  ta.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") next(); });
+  function next(){
+    state.answers[sec.key][i] = ta.value;
+    if (i < sec.questions.length - 1) { state.step = i + 1; } else { state.view = "review"; }
+    render(); window.scrollTo(0,0);
+  }
+  document.getElementById("next").onclick = next;
+  document.getElementById("back").onclick = () => {
+    state.answers[sec.key][i] = ta.value;
+    if (i > 0) state.step = i - 1; else state.view = "intro";
+    render();
+  };
+}
+
+function reviewBlock(sec){
+  return sec.questions.map((item, i) => {
+    const a = (state.answers[sec.key][i] || "").trim();
+    return `<div class="q">${esc(item.q)}</div><div class="a ${a ? "" : "empty"}">${a ? esc(a) : "No answer"}</div>`;
+  }).join("");
+}
+
+function renderReview(){
+  const sec = SECTIONS[state.section];
+  const last = state.section === SECTIONS.length - 1;
+  app.innerHTML = `
+    <div class="screen">
+      <div class="stage">${sec.label} · review</div>
+      <h2>${esc(sec.intro)}</h2>
+            <div class="review">${reviewBlock(sec)}</div>
+      <div class="row">
+        <button class="quiet" id="edit">Edit answers</button>
+        <button id="go">${last ? "See both futures" : "Now the best case"}</button>
+      </div>
+    </div>`;
+  document.getElementById("edit").onclick = () => { state.step = 0; state.view = "question"; render(); window.scrollTo(0,0); };
+  document.getElementById("go").onclick = () => {
+    if (last) { state.view = "final"; }
+    else { state.section += 1; state.step = 0; state.view = "question"; }
+    render(); window.scrollTo(0,0);
+  };
+}
+
+function buildText(){
+  const lines = ["TWO FUTURES", "Completed " + new Date().toLocaleDateString(), ""];
+  SECTIONS.forEach(sec => {
+    lines.push("== " + sec.label.toUpperCase() + " ==", sec.intro, "");
+    sec.questions.forEach((item, i) => {
+      lines.push("Q: " + item.q, "A: " + ((state.answers[sec.key][i] || "").trim() || "(no answer)"), "");
+    });
+  });
+  lines.push("== COMPARE ==",
+    "- What shows up on both lists?",
+    "- Which best-case answer is just the worst-case answer inverted?",
+    "- What's one thing from the best-case list I could start this week?");
+  return lines.join("\n");
+}
+
+function renderFinal(){
+  app.innerHTML = `
+    <div class="screen">
+      <h1>Both futures</h1>
+      <p class="muted">Here's everything side by side. Before you copy it, look for what shows up in both.</p>
+      <div class="compare">
+        <strong>Three things to look for</strong>
+        <ul>
+          <li>What shows up on both lists?</li>
+          <li>Which best-case answer is just the worst-case answer inverted? Those are your real to-dos.</li>
+          <li>What's one thing from the best-case list you could start this week?</li>
+        </ul>
+      </div>
+      <div class="row">
+        <button id="copy">Copy everything to clipboard</button>
+        <span class="toast hidden" id="toast">Copied</span>
+      </div>
+      <div class="review">
+        <h2>${esc(SECTIONS[0].intro)}</h2>
+        ${reviewBlock(SECTIONS[0])}
+        <h2 style="margin-top:20px">${esc(SECTIONS[1].intro)}</h2>
+        ${reviewBlock(SECTIONS[1])}
+      </div>
+      <div class="row">
+        <button class="quiet" id="editW">Edit worst case</button>
+        <button class="quiet" id="editB">Edit best case</button>
+        <button id="copy2">Copy everything to clipboard</button>
+      </div>
+      <textarea id="fallback" class="hidden" aria-hidden="true"></textarea>
+    </div>`;
+  const doCopy = async () => {
+    const text = buildText();
+    let ok = false;
+    try { await navigator.clipboard.writeText(text); ok = true; } catch(e){}
+    if (!ok) {
+      const fb = document.getElementById("fallback");
+      fb.classList.remove("hidden"); fb.value = text; fb.select();
+      try { ok = document.execCommand("copy"); } catch(e){}
+      fb.classList.add("hidden");
+    }
+    const t = document.getElementById("toast");
+    t.textContent = ok ? "Copied" : "Couldn't copy. Select the text above and copy it manually.";
+    t.classList.remove("hidden");
+    window.scrollTo({top:0, behavior:"smooth"});
+  };
+  document.getElementById("copy").onclick = doCopy;
+  document.getElementById("copy2").onclick = doCopy;
+  document.getElementById("editW").onclick = () => { state.section = 0; state.step = 0; state.view = "question"; render(); window.scrollTo(0,0); };
+  document.getElementById("editB").onclick = () => { state.section = 1; state.step = 0; state.view = "question"; render(); window.scrollTo(0,0); };
+}
+
+render();
+</script>
+</body>
+</html>
